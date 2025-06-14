@@ -330,31 +330,33 @@ func (l *Loader) processField(field reflect.Value, fieldType reflect.StructField
 
 // setFieldValue sets the field value with proper type conversion
 func (l *Loader) setFieldValue(field reflect.Value, value, fieldName string) error {
+	// Handle time.Duration as a special case before checking reflect.Kind
+	if field.Type() == reflect.TypeOf(time.Duration(0)) {
+		duration, err := time.ParseDuration(value)
+		if err != nil {
+			return fmt.Errorf("invalid duration for %s: %v", fieldName, err)
+		}
+		field.Set(reflect.ValueOf(duration))
+		return nil
+	}
+
 	switch field.Kind() {
 	case reflect.String:
 		field.SetString(value)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if field.Type() == reflect.TypeOf(time.Duration(0)) {
-			duration, err := time.ParseDuration(value)
-			if err != nil {
-				return fmt.Errorf("invalid duration for %s: %v", fieldName, err)
-			}
-			field.SetInt(int64(duration))
-		} else {
-			intVal, err := strconv.ParseInt(value, 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid integer for %s: %v", fieldName, err)
-			}
-			field.SetInt(intVal)
+		intVal, err := strconv.ParseInt(value, 10, field.Type().Bits())
+		if err != nil {
+			return fmt.Errorf("invalid integer for %s: %v", fieldName, err)
 		}
+		field.SetInt(intVal)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		uintVal, err := strconv.ParseUint(value, 10, 64)
+		uintVal, err := strconv.ParseUint(value, 10, field.Type().Bits())
 		if err != nil {
 			return fmt.Errorf("invalid unsigned integer for %s: %v", fieldName, err)
 		}
 		field.SetUint(uintVal)
 	case reflect.Float32, reflect.Float64:
-		floatVal, err := strconv.ParseFloat(value, 64)
+		floatVal, err := strconv.ParseFloat(value, field.Type().Bits())
 		if err != nil {
 			return fmt.Errorf("invalid float for %s: %v", fieldName, err)
 		}
@@ -452,7 +454,18 @@ func (l *Loader) getFlagName(field reflect.StructField) string {
 // getFlagValue gets value from command line flags
 func (l *Loader) getFlagValue(name string) string {
 	if f := l.flagSet.Lookup(name); f != nil {
-		return f.Value.String()
+		// Check if the flag was actually set by the user
+		visited := false
+		l.flagSet.Visit(func(visitedFlag *flag.Flag) {
+			if visitedFlag.Name == name {
+				visited = true
+			}
+		})
+
+		// Only return flag value if it was explicitly set by user
+		if visited {
+			return f.Value.String()
+		}
 	}
 	return ""
 }
