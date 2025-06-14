@@ -33,7 +33,7 @@ type Config struct {
     Port     int           `env:"PORT" flag:"port" default:"8080" usage:"Server port"`
     Debug    bool          `env:"DEBUG" flag:"debug" default:"false" usage:"Enable debug mode"`
     Timeout  time.Duration `env:"TIMEOUT" flag:"timeout" default:"30s" usage:"Request timeout"`
-    Database DatabaseConfig `envPrefix:"DB_"`
+    Database DatabaseConfig `prefix:"DB_"`
 }
 
 type DatabaseConfig struct {
@@ -55,14 +55,14 @@ func main() {
 
 ## Struct Tag Reference
 
-| Tag         | Description                     | Example                                  |
-| ----------- | ------------------------------- | ---------------------------------------- |
-| `env`       | Environment variable name(s)    | `env:"PORT"` or `env:"PORT,SERVER_PORT"` |
-| `flag`      | Command-line flag name(s)       | `flag:"port"` or `flag:"port,p"`         |
-| `default`   | Default value if not set        | `default:"8080"`                         |
-| `usage`     | Help text for flags             | `usage:"Port to listen on"`              |
-| `required`  | Field must be provided          | `required:"true"`                        |
-| `envPrefix` | Prefix for nested struct fields | `envPrefix:"DB_"`                        |
+| Tag        | Description                     | Example                                  |
+| ---------- | ------------------------------- | ---------------------------------------- |
+| `env`      | Environment variable name(s)    | `env:"PORT"` or `env:"PORT,SERVER_PORT"` |
+| `flag`     | Command-line flag name(s)       | `flag:"port"` or `flag:"port,p"`         |
+| `default`  | Default value if not set        | `default:"8080"`                         |
+| `usage`    | Help text for flags             | `usage:"Port to listen on"`              |
+| `required` | Field must be provided          | `required:"true"`                        |
+| `prefix`   | Prefix for nested struct fields | `prefix:"DB_"`                           |
 
 ## Complete Feature Examples
 
@@ -146,8 +146,8 @@ type DatabaseConfig struct {
 
 type Config struct {
     AppName  string         `env:"APP_NAME" default:"myapp"`
-    Server   ServerConfig   `envPrefix:"SERVER_"`
-    Database DatabaseConfig `envPrefix:"DB_"`
+    Server   ServerConfig   `prefix:"SERVER_"`
+    Database DatabaseConfig `prefix:"DB_"`
 }
 ```
 
@@ -310,7 +310,7 @@ type ServerConfig struct {
     ReadTimeout    time.Duration `env:"READ_TIMEOUT" default:"30s"`
     WriteTimeout   time.Duration `env:"WRITE_TIMEOUT" default:"30s"`
     MaxHeaderBytes int           `env:"MAX_HEADER_BYTES" default:"1048576"`
-    TLS            TLSConfig     `envPrefix:"TLS_"`
+    TLS            TLSConfig     `prefix:"TLS_"`
 }
 
 type TLSConfig struct {
@@ -324,10 +324,10 @@ type Config struct {
     Environment string         `env:"ENVIRONMENT" flag:"env" default:"development" usage:"Environment (development, staging, production)"`
     Debug       bool           `env:"DEBUG" flag:"debug" default:"false" usage:"Enable debug mode"`
 
-    Server   ServerConfig   `envPrefix:"SERVER_"`
-    Database DatabaseConfig `envPrefix:"DB_"`
-    Redis    RedisConfig    `envPrefix:"REDIS_"`
-    Log      LogConfig      `envPrefix:"LOG_"`
+    Server   ServerConfig   `prefix:"SERVER_"`
+    Database DatabaseConfig `prefix:"DB_"`
+    Redis    RedisConfig    `prefix:"REDIS_"`
+    Log      LogConfig      `prefix:"LOG_"`
 
     // Feature flags
     Features []string `env:"FEATURES" flag:"features" usage:"Comma-separated list of enabled features"`
